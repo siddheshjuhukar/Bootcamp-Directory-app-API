@@ -2,7 +2,9 @@ const express = require('express')
 const dotenv = require('dotenv')
 const logger = require('./middleware/logger')
 const morgan = require('morgan')
+const colors = require('colors')
 const connectDB = require('./config/db')
+const errorHandler = require('./middleware/error')
 
 dotenv.config({ path: './config/config.env' })
 
@@ -14,20 +16,25 @@ const bootcamps = require('./routes/bootcamps')
 
 const app = express()
 
+//Body parser
+app.use(express.json())
+
 //Dev logging middleware
 app.use(morgan('dev'))
 
 //Mount routes
 app.use('/api/v1/bootcamps', bootcamps)
 
+app.use(errorHandler)
+
 const PORT = process.env.PORT || 5000
 const serverType = process.env.NODE_ENV || 'production'
 const server = app.listen(PORT, () => {
-    console.log(`Server up and running in ${serverType} on port ${PORT}`)
+    console.log(`Server up and running in ${serverType} on port ${PORT}`.yellow.bold)
 })
 
 process.on('unhandledRejection', (error, promise) => {
-    console.log(`Error: ${error.message}`)
+    console.log(`Error: ${error.message}`.red)
     //Close server and exit process
     server.close(() => process.exit(1))
 })
