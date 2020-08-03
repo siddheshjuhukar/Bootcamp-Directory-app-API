@@ -1,8 +1,7 @@
-const ErrorResponse = require('../middleware/error')
+const ErrorResponse = require('../utils/errorResponse')
 const asyncHandler = require('../middleware/async')
 const Course = require('../models/Course')
 const Bootcamp = require('../models/Bootcamp')
-
 
 // @desc    Get courses
 // @route   Get /api/v1/courses
@@ -56,6 +55,7 @@ exports.getCourse = asyncHandler(async (req, res, next) => {
 // @access  Private
 exports.addCourse = asyncHandler(async (req, res, next) => {
     req.body.bootcamp = req.params.bootcampId
+    req.body.user = req.user.id
 
     const bootcamp = await Bootcamp.findById(req.params.bootcampId)
 
@@ -63,6 +63,13 @@ exports.addCourse = asyncHandler(async (req, res, next) => {
         return next(
             new ErrorResponse(`No bootcamp with the id of ${req.params.bootcampId} found`, 404)
             )
+    }
+
+    // Make sure user is the bootcamp owner
+    if(bootcamp.user.toString() !== req.user.id && req.user.role !== 'admin') {
+        return next(
+            new ErrorResponse(`User ${req.user.id} is not authorized to add a course to bootcamp ${bootcamp._id}`)
+        )
     }
 
     const course = await Course.create(req.body)
@@ -81,7 +88,14 @@ exports.updateCourse = asyncHandler(async(req, res, next) => {
 
     if (!course) {
         return next(
-            new ErrorResponse(`No course with the id of ${req.params.id}`, 404)//TypeError: ErrorResponse is not a constructor
+            new ErrorResponse(`No course with the id of ${req.params.id}`, 404)
+        )
+    }
+
+    // Make sure user is the course owner
+    if(course.user.toString() !== req.user.id && req.user.role !== 'admin') {
+        return next(
+            new ErrorResponse(`User ${req.user.id} is not authorized to update course ${course._id}`)
         )
     }
 
@@ -104,7 +118,14 @@ exports.deleteCourse = asyncHandler(async(req, res, next) => {
 
     if (!course) {
         return next(
-            new ErrorResponse(`No course with the id of ${req.params.id}`, 404)//TypeError: ErrorResponse is not a constructor
+            new ErrorResponse(`No course with the id of ${req.params.id}`, 404)
+        )
+    }
+
+    // Make sure user is the course owner
+    if(course.user.toString() !== req.user.id && req.user.role !== 'admin') {
+        return next(
+            new ErrorResponse(`User ${req.user.id} is not authorized to delete course ${course._id}`)
         )
     }
 
