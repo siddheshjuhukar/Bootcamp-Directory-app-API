@@ -8,50 +8,9 @@ const path = require('path')
 // @route   GET /api/v1/bootcamps
 // @access  public
 exports.getBootcamps = asyncHandler(async (req, res, next) => {
-    let query
 
-    //Create req query
-    let reqQuery = { ...req.query }
 
-    //Fields to exclude
-    const removeFields = ['select', 'sort', 'page', 'limit']
-
-    //Loop over removeFields and delete them from reqQuery
-    removeFields.forEach(params => delete reqQuery[params])
-
-    console.log(reqQuery)
-
-    //Create query string
-    let queryStr = JSON.stringify(req.query)
-
-    //Create operators ($gt, $gte etc)
-    queryStr = queryStr.replace(/\b(gt|gte|le|lte|in)\b/g, match => `$${match}`)
-
-    query = Bootcamp.find(JSON.parse(queryStr)).populate('courses')
-
-    if(req.query.select) {
-        const fields = req.query.select.split(',').join(' ')
-        query = query.select(fields)
-    }
-
-    if (req.query.sort) {
-        const sortBy = req.query.sort.split(',').join(' ')
-        query = query.sort(sortBy)
-        console.log(sortBy)
-    } else {
-        query = query.sort('-createdAt')
-    }
-
-    //Pagination
-    const page = parseInt(req.query.page, 10) || 1
-    const limit = parseInt(req.query.limit, 10) || 100
-    const skip = (page - 1) * limit
-
-    query = query.skip(skip).limit(limit)
-
-    const bootcamps = await query
-
-    res.status(200).json({success: true, count: bootcamps.length, data: bootcamps})
+    res.status(200).json(res.advancedResults)
 })
 
 // @desc    Get single bootcamp
